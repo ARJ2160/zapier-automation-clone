@@ -1,17 +1,17 @@
 'use client';
 
-import * as React from 'react';
+import { Command as CommandPrimitive, useCommandState } from 'cmdk';
 import { X } from 'lucide-react';
+import * as React from 'react';
+import { forwardRef, useEffect } from 'react';
 
+import { Badge } from '@/components/ui/badge';
 import {
   Command,
   CommandGroup,
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import { Command as CommandPrimitive, useCommandState } from 'cmdk';
-import { useEffect, forwardRef } from 'react';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 export interface Option {
@@ -121,7 +121,7 @@ function removePickedOption(groupOption: GroupOption, picked: Option[]) {
 
   for (const [key, value] of Object.entries(cloneOption)) {
     cloneOption[key] = value.filter(
-      val => !picked.find(p => p.value === val.value),
+      value_ => !picked.find(p => p.value === value_.value),
     );
   }
   return cloneOption;
@@ -217,10 +217,12 @@ const MultipleSelector = React.forwardRef<
       (e: React.KeyboardEvent<HTMLDivElement>) => {
         const input = inputRef.current;
         if (input) {
-          if (e.key === 'Delete' || e.key === 'Backspace') {
-            if (input.value === '' && selected.length > 0) {
-              handleUnselect(selected[selected.length - 1]);
-            }
+          if (
+            (e.key === 'Delete' || e.key === 'Backspace') &&
+            input.value === '' &&
+            selected.length > 0
+          ) {
+            handleUnselect(selected.at(-1));
           }
           // This is not a default behaviour of the <input /> field
           if (e.key === 'Escape') {
@@ -272,7 +274,7 @@ const MultipleSelector = React.forwardRef<
     }, [debouncedSearchTerm, open]);
 
     const CreatableItem = () => {
-      if (!creatable) return undefined;
+      if (!creatable) return;
 
       const Item = (
         <CommandItem
@@ -305,11 +307,11 @@ const MultipleSelector = React.forwardRef<
         return Item;
       }
 
-      return undefined;
+      return;
     };
 
     const EmptyItem = React.useCallback(() => {
-      if (!emptyIndicator) return undefined;
+      if (!emptyIndicator) return;
 
       // For async search that showing emptyIndicator
       if (onSearch && !creatable && Object.keys(options).length === 0) {
@@ -340,7 +342,7 @@ const MultipleSelector = React.forwardRef<
         };
       }
       // Using default filter in `cmdk`. We don't have to provide it.
-      return undefined;
+      return;
     }, [creatable, commandProps?.filter]);
 
     return (
@@ -355,9 +357,9 @@ const MultipleSelector = React.forwardRef<
           commandProps?.className,
         )}
         shouldFilter={
-          commandProps?.shouldFilter !== undefined
-            ? commandProps.shouldFilter
-            : !onSearch
+          commandProps?.shouldFilter === undefined
+            ? !onSearch
+            : commandProps.shouldFilter
         } // When onSearch is provided, we don't want to filter the options. You can still override it.
         filter={commandFilter()}
       >
@@ -422,7 +424,7 @@ const MultipleSelector = React.forwardRef<
                 inputProps?.onFocus?.(event);
               }}
               placeholder={
-                hidePlaceholderWhenSelected && selected.length !== 0
+                hidePlaceholderWhenSelected && selected.length > 0
                   ? ''
                   : placeholder
               }
